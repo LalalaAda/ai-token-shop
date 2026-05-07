@@ -14,29 +14,43 @@ export async function POST(request: Request) {
 
     const orderNo = generateOrderNo();
 
-    const result = await prisma.order.create({
-      data: {
-        orderNo,
-        userId: body.userId,
-        totalAmount: body.totalAmount,
-        payAmount: body.payAmount,
-        discountAmount: body.discountAmount || 0,
-        expireAt: new Date(Date.now() + 30 * 60 * 1000),
-        items: {
-          create: items.map((item: any) => ({
-            productId: item.productId,
-            productName: item.productName,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            subtotal: item.subtotal,
-          })),
+    // Use transaction: create order + update coupon usage count
+    const result = await prisma.$transaction(async (tx) => {
+      const order = await tx.order.create({
+        data: {
+          orderNo,
+          userId: body.userId,
+          totalAmount: body.totalAmount,
+          payAmount: body.payAmount,
+          discountAmount: body.discountAmount || 0,
+          expireAt: new Date(Date.now() + 30 * 60 * 1000),
+          items: {
+            create: items.map((item: any) => ({
+              productId: item.productId,
+              productName: item.productName,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              subtotal: item.subtotal,
+            })),
+          },
         },
-      },
-      include: { items: true },
+        include: { items: true },
+      });
+
+      // If coupon was used, increment its usage count
+      if (couponId && body.discountAmount > 0) {
+        await tx.coupon.update({
+          where: { id: couponId },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+
+      return order;
     });
 
     return NextResponse.json(successResponse(result), { status: 201 });
   } catch (error) {
+    console.error('Create order error:', error);
     return NextResponse.json(errorResponse('创建订单失败'), { status: 500 });
   }
 }
