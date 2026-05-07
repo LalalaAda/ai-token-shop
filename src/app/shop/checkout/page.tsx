@@ -135,7 +135,7 @@ export default function CheckoutPage() {
     return (
       <div className="max-w-4xl mx-auto text-center py-20">
         <p className="text-gray-500 mb-4">购物车是空的</p>
-        <a href="/products" className="text-blue-600 hover:underline">去选购 →</a>
+        <a href="/shop/products" className="text-blue-600 hover:underline">去选购 →</a>
       </div>
     );
   }

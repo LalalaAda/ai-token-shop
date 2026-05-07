@@ -25,7 +25,7 @@ function DemoPaymentContent() {
           body: JSON.stringify({ orderId, paymentId }),
         });
         setStatus('success');
-        setTimeout(() => router.push('/user/orders'), 2000);
+        setTimeout(() => router.push('/shop/user/orders'), 2000);
       } catch (e) {
         console.error('Payment failed:', e);
         setStatus('failed');
@@ -57,7 +57,7 @@ function DemoPaymentContent() {
       <XCircle className="w-16 h-16 text-red-500 mb-6" />
       <h2 className="text-xl font-semibold mb-2">支付失败</h2>
       <p className="text-gray-500 mb-4">请重试或联系客服</p>
-      <button onClick={() => router.push('/checkout')} className="text-blue-600 hover:underline">返回结账</button>
+      <button onClick={() => router.push('/shop/checkout')} className="text-blue-600 hover:underline">返回结账</button>
     </div>
   );
 }

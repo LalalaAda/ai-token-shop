@@ -22,6 +22,12 @@ interface Token {
   }
 }
 
+interface Product {
+  id: string
+  name: string
+  slug: string
+}
+
 export default function TokenManagementPage() {
   const [tokens, setTokens] = useState<Token[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,6 +44,7 @@ export default function TokenManagementPage() {
   const [showGenerateModal, setShowGenerateModal] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [products, setProducts] = useState<Product[]>([])
 
   // 生成卡密表单
   const [generateForm, setGenerateForm] = useState({
@@ -71,6 +78,22 @@ export default function TokenManagementPage() {
   useEffect(() => {
     fetchTokens()
   }, [fetchTokens])
+
+  // 加载商品列表用于生成模态框
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch("/api/admin/products?limit=500")
+        const json = await res.json()
+        if (json.success) {
+          setProducts(json.data.products)
+        }
+      } catch (e) {
+        console.error("Failed to load products:", e)
+      }
+    }
+    fetchProducts()
+  }, [])
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -270,15 +293,17 @@ export default function TokenManagementPage() {
             <form onSubmit={handleGenerate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">选择商品</label>
-                <select
-                  value={generateForm.productId}
-                  onChange={(e) => setGenerateForm({ ...generateForm, productId: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
-                  required
-                >
-                  <option value="">请选择商品</option>
-                  {/* TODO: 加载商品列表 */}
-                </select>
+                  <select
+                    value={generateForm.productId}
+                    onChange={(e) => setGenerateForm({ ...generateForm, productId: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg"
+                    required
+                  >
+                    <option value="">请选择商品</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">生成数量</label>
