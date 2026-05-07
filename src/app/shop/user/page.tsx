@@ -1,63 +1,60 @@
 ﻿'use client';
 
 import Link from 'next/link';
-import { Package, Ticket, Heart, Settings, Loader2 } from 'lucide-react';
+import { Package, Ticket, Settings, Loader2, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 interface User {
+  id: string;
   nickname: string | null;
   avatar: string | null;
+  phone: string | null;
+  email: string | null;
   memberLevel: number;
   points: number;
   balance: number;
 }
 
-function getUserId(): string {
-  if (typeof window === 'undefined') return '';
-  let userId = localStorage.getItem('shop_user_id');
-  if (!userId) {
-    userId = 'user_' + Math.random().toString(36).substring(2, 15);
-    localStorage.setItem('shop_user_id', userId);
-  }
-  return userId;
-}
-
 const memberLevels = ['', '普通会员', '白银会员', '黄金会员', '铂金会员', '钻石会员'];
 
 export default function UserCenterPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    if (status === 'loading') return;
+    if (!session) {
+      router.push('/shop/login');
+      return;
+    }
+
+    const fetchProfile = async () => {
       try {
-        const userId = getUserId();
-        // For demo, generate a simple user object
-        // In production, fetch from /api/user
-        setUser({
-          nickname: '用户',
-          avatar: null,
-          memberLevel: 0,
-          points: 0,
-          balance: 0,
-        });
+        const res = await fetch('/api/user/profile');
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        }
       } catch (e) {
-        console.error('Failed to fetch user:', e);
+        console.error('Failed to fetch profile:', e);
       } finally {
         setLoading(false);
       }
     };
-    fetchUser();
-  }, []);
+    fetchProfile();
+  }, [session, status, router]);
 
   const menuItems = [
-    { icon: Package, label: '我的订单', href: '/user/orders', desc: '查看全部订单' },
-    { icon: Ticket, label: '优惠券', href: '/user/coupons', desc: '查看可用优惠券' },
-    { icon: Heart, label: '我的收藏', href: '/user/favorites', desc: '收藏的商品' },
-    { icon: Settings, label: '账号设置', href: '/user/settings', desc: '修改个人资料' },
+    { icon: Package, label: '我的订单', href: '/shop/user/orders', desc: '查看全部订单' },
+    { icon: Ticket, label: '我的卡密', href: '/shop/user/tokens', desc: '查看已购买的卡密' },
+    { icon: Settings, label: '账号设置', href: '/shop/user/settings', desc: '修改个人资料' },
   ];
 
-  if (loading) {
+  if (status === 'loading' || loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -70,16 +67,24 @@ export default function UserCenterPage() {
       <div className="bg-white rounded-xl border p-6 mb-6">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-xl font-bold">
-            {user?.nickname?.[0] || '我用'}
+            {user?.nickname?.[0] || session?.user?.name?.[0] || '用'}
           </div>
-          <div>
-            <h2 className="text-xl font-bold">{user?.nickname || '用户'}</h2>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold">{user?.nickname || session?.user?.name || '用户'}</h2>
+            <p className="text-sm text-gray-500">{user?.phone || user?.email || session?.user?.email || ''}</p>
             {user?.memberLevel ? (
               <span className="bg-yellow-100 text-yellow-700 text-sm px-2 py-1 rounded">
                 {memberLevels[user.memberLevel] || '普通会员'}
               </span>
             ) : null}
           </div>
+          <button
+            onClick={() => signOut({ callbackUrl: '/shop' })}
+            className="p-2 hover:bg-gray-100 rounded-lg transition"
+            title="退出登录"
+          >
+            <LogOut className="w-5 h-5 text-gray-400" />
+          </button>
         </div>
         <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t">
           <div className="text-center">
