@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { Eye, Loader2 } from 'lucide-react';
 
 interface Order {
@@ -14,7 +15,8 @@ interface Order {
   tokenKeys?: { keyValue: string; keyType: string }[];
 }
 
-function getUserId(): string {
+function getUserId(sessionUserId?: string | null): string {
+  if (sessionUserId) return sessionUserId;
   if (typeof window === 'undefined') return '';
   let userId = localStorage.getItem('shop_user_id');
   if (!userId) {
@@ -35,13 +37,14 @@ const statusMap: Record<string, { label: string; color: string }> = {
 };
 
 export default function UserOrdersPage() {
+  const { data: session } = useSession();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const userId = getUserId();
+        const userId = getUserId(session?.user?.id);
         const res = await fetch(`/api/orders?userId=${userId}`);
         const json = await res.json();
         if (json.success) {
@@ -80,7 +83,7 @@ export default function UserOrdersPage() {
       {orders.length === 0 ? (
         <div className="bg-white rounded-xl border p-12 text-center">
           <p className="text-gray-500 mb-4">暂无订单</p>
-          <Link href="/products" className="text-blue-600 hover:underline">去选购 →</Link>
+          <Link href="/shop/products" className="text-blue-600 hover:underline">去选购 →</Link>
         </div>
       ) : (
         <div className="space-y-4">

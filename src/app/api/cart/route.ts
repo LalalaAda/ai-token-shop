@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/types';
+import { auth } from '@/lib/auth';
+
+async function getUserId(request: Request): Promise<string | null> {
+  // Try session first
+  const session = await auth();
+  if (session?.user?.id) return session.user.id;
+  // Fallback to query param / body for anonymous users
+  const { searchParams } = new URL(request.url);
+  return searchParams.get('userId');
+}
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const userId = await getUserId(request);
 
     if (!userId) {
       return NextResponse.json(successResponse({ items: [] }));
@@ -35,7 +44,10 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { productId, quantity, userId } = body;
+    const { productId, quantity } = body;
+    // Try session first, then body.userId for anonymous fallback
+    const session = await auth();
+    const userId = session?.user?.id || body.userId;
 
     if (!productId || !userId) {
       return NextResponse.json(errorResponse('缺少必要参数'), { status: 400 });

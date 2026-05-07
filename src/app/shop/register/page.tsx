@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { signIn } from "next-auth/react"
 import { Loader2 } from "lucide-react"
 
 export default function RegisterPage() {
@@ -52,10 +53,23 @@ export default function RegisterPage() {
         return
       }
 
-      setSuccess(true)
-      setTimeout(() => {
-        router.push("/shop/login")
-      }, 2000)
+      // Auto-login after successful registration
+      const signInResult = await signIn("credentials", {
+        login: formData.login,
+        password: formData.password,
+        redirect: false,
+      })
+
+      if (signInResult?.error) {
+        // Fallback: redirect to login page if auto-login fails
+        setSuccess(true)
+        setTimeout(() => {
+          router.push("/shop/login")
+        }, 2000)
+      } else {
+        router.push("/shop")
+        router.refresh()
+      }
     } catch (err) {
       setError("注册失败，请稍后重试")
     } finally {

@@ -2,11 +2,19 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { ShoppingCart, Minus, Plus } from 'lucide-react';
 
 export default function AddToCartButton({ productId, stock }: { productId: string; stock: number }) {
+  const { data: session } = useSession();
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
+
+  const getUserId = (): string | undefined => {
+    if (session?.user?.id) return session.user.id;
+    if (typeof window === 'undefined') return undefined;
+    return localStorage.getItem('shop_user_id') || undefined;
+  };
 
   const handleAddToCart = async () => {
     setLoading(true);
@@ -14,7 +22,7 @@ export default function AddToCartButton({ productId, stock }: { productId: strin
       const res = await fetch('/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, quantity }),
+        body: JSON.stringify({ productId, quantity, userId: getUserId() }),
       });
       const data = await res.json();
       if (data.success) {
@@ -49,7 +57,7 @@ export default function AddToCartButton({ productId, stock }: { productId: strin
           {loading ? '添加中...' : stock === 0 ? '已售罄' : '加入购物车'}
         </button>
         <Link
-          href={`/checkout?productId=${productId}&quantity=${quantity}`}
+          href={`/shop/checkout?productId=${productId}&quantity=${quantity}`}
           className={`flex-1 py-3 rounded-lg font-semibold transition text-center ${stock === 0 ? 'bg-gray-400 text-gray-200 pointer-events-none' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
         >
           立即购买

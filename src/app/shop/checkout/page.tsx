@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { CreditCard, Smartphone, Loader2, CheckCircle } from 'lucide-react';
 
 interface CartItem {
@@ -14,7 +15,10 @@ interface CartItem {
   };
 }
 
-function getUserId(): string {
+function getUserId(sessionUserId?: string | null): string {
+  // Use session user ID if available
+  if (sessionUserId) return sessionUserId;
+  // Fallback to localStorage for anonymous users
   if (typeof window === 'undefined') return '';
   let userId = localStorage.getItem('shop_user_id');
   if (!userId) {
@@ -26,6 +30,7 @@ function getUserId(): string {
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [payMethod, setPayMethod] = useState<'wechat' | 'alipay'>('wechat');
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +41,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const userId = getUserId();
+        const userId = getUserId(session?.user?.id);
         const res = await fetch(`/api/cart?userId=${userId}`);
         const json = await res.json();
         if (json.success && json.data?.items) {
@@ -58,7 +63,7 @@ export default function CheckoutPage() {
     setProcessing(true);
 
     try {
-      const userId = getUserId();
+      const userId = getUserId(session?.user?.id);
       const items = cartItems.map(item => ({
         productId: item.product.id,
         productName: item.product.name,
@@ -104,11 +109,11 @@ export default function CheckoutPage() {
         window.location.href = payJson.data.payUrl;
       } else if (payJson.success && payJson.data?.paymentId) {
         // Demo mode - go to demo payment page
-        window.location.href = `/pay/demo?orderId=${newOrderId}&paymentId=${payJson.data.paymentId}`;
+        window.location.href = `/shop/pay/demo?orderId=${newOrderId}&paymentId=${payJson.data.paymentId}`;
       } else {
         // For demo, just show success
         alert('订单创建成功！(支付功能演示模式)');
-        router.push('/user/orders');
+        router.push('/shop/user/orders');
       }
     } catch (e) {
       console.error('Checkout failed:', e);

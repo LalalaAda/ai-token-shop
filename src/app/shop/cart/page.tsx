@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import { Trash2, Minus, Plus, ArrowLeft, Loader2 } from 'lucide-react';
 
 interface CartItem {
@@ -16,7 +17,8 @@ interface CartItem {
   };
 }
 
-function getUserId(): string {
+function getUserId(sessionUserId?: string | null): string {
+  if (sessionUserId) return sessionUserId;
   if (typeof window === 'undefined') return '';
   let userId = localStorage.getItem('shop_user_id');
   if (!userId) {
@@ -27,13 +29,14 @@ function getUserId(): string {
 }
 
 export default function CartPage() {
+  const { data: session } = useSession();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
 
   const fetchCart = async () => {
     try {
-      const userId = getUserId();
+      const userId = getUserId(session?.user?.id);
       const res = await fetch(`/api/cart?userId=${userId}`);
       const json = await res.json();
       if (json.success && json.data?.items) {
@@ -60,7 +63,7 @@ export default function CartPage() {
 
     setUpdating(id);
     try {
-      const userId = getUserId();
+      const userId = getUserId(session?.user?.id);
       await fetch(`/api/cart`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -107,7 +110,7 @@ return (
       {cartItems.length === 0 ? (
         <div className="bg-white rounded-xl border p-12 text-center">
           <p className="text-gray-500 mb-4">购物车是空的</p>
-          <Link href="/products" className="text-blue-600 hover:underline">去逛逛 →</Link>
+          <Link href="/shop/products" className="text-blue-600 hover:underline">去逛逛 →</Link>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -147,7 +150,7 @@ return (
                 <div className="flex justify-between text-sm"><span className="text-gray-500">优惠</span><span className="text-green-600">-¥0.00</span></div>
                 <div className="border-t pt-3 flex justify-between font-bold"><span>应付总额</span><span className="text-red-500 text-xl">¥{total.toFixed(2)}</span></div>
               </div>
-              <Link href="/checkout" className="block w-full bg-blue-600 text-white py-3 rounded-lg font-semibold text-center hover:bg-blue-700 transition">
+              <Link href="/shop/checkout" className="block w-full bg-blue-600 text-white py-3 rounded-lg font-semibold text-center hover:bg-blue-700 transition">
                 去结算
               </Link>
             </div>
