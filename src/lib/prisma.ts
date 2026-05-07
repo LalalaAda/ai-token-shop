@@ -1,13 +1,17 @@
-﻿// Prisma Client with PostgreSQL adapter
-//// @ts-nocheck - Prisma 7 has unusual module structure
-// import * as Prisma from './prisma/client'
-import { PrismaClient } from '../generated/client'
-import { PrismaPg } from '@prisma/adapter-pg'
+﻿import { PrismaClient } from "../generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-function getPrisma() {
-  // const { PrismaPg } = require('@prisma/adapter-pg')
-  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL || '' })
-  return new PrismaClient({ adapter })
+const rawDatabaseUrl = process.env.DATABASE_URL;
+const databaseUrl = (rawDatabaseUrl ?? "").trim();
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is required");
 }
 
-export default getPrisma()
+const adapter = new PrismaPg({
+  connectionString: databaseUrl,
+});
+
+const prisma = new PrismaClient({ adapter });
+
+export { prisma };
+export default prisma;

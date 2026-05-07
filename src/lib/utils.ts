@@ -1,4 +1,4 @@
-﻿import { Decimal } from "@/generated/internal/prismaNamespace";
+﻿import { Decimal } from "@prisma/client/runtime/client";
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
