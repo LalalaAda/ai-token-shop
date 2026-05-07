@@ -31,19 +31,8 @@ AI Token Shop - E-commerce platform for selling AI tokens/keys with admin panel
 | DB models | `prisma/schema.prisma` | 18 models |
 | Utils | `src/lib/*.ts` | Shared functions |
 
-## FEATURE STATUS (P0 Complete)
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Auth (register/login/logout) | ✅ | NextAuth credentials + auto-login |
-| Products | ✅ | CRUD, listing, detail, admin mgmt |
-| Cart | ✅ | Session-aware + localStorage fallback |
-| Orders | ✅ | State machine (7 states), admin mgmt |
-| Payment | ✅ | Demo flow with token auto-distribution |
-| Token Keys | ✅ | Generate/manage/distribute/view |
-| Admin Dashboard | ✅ | Real Prisma stats (orders, revenue, top5) |
-| Admin Users | ✅ | Search, filter, paginate, ban/unban |
-| Admin Tokens | ✅ | Generate batch, filter, paginate |
-| Admin Inventory | ✅ | Redirects to token mgmt page |
+## PROJECT PROGRESS
+@PROJECT_PROGRESS.md
 
 ## CONVENTIONS
 - Next.js 16 App Router (not legacy pages)
