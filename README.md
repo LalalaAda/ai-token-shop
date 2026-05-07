@@ -4,8 +4,11 @@
 
 ## 预览图
 <div align="center">
-[![Preview](./.github/assets/p1.jpeg)](https://github.com/LalalaAda/ai-token-shop)
-[![Preview2](./.github/assets/p2.jpeg)](https://github.com/LalalaAda/ai-token-shop)
+
+![Preview](./.github/assets/p1.jpg)
+
+![Preview2](./.github/assets/p2.jpg)
+
 </div>
 
 ---
