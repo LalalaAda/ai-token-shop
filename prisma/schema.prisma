@@ -1,0 +1,405 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/lib/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  openid        String?   @unique
+  unionId       String?   @unique @map("union_id")
+  nickname      String?
+  avatar        String?
+  phone         String?
+  email         String?
+  memberLevel   Int       @default(0) @map("member_level")
+  points        Int       @default(0)
+  balance       Decimal   @default(0) @db.Decimal(10, 2)
+  status        UserStatus @default(ACTIVE)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  orders        Order[]
+  payments      Payment[]
+  userCoupons   UserCoupon[]
+  cartItems     CartItem[]
+  reviews       Review[]
+
+  @@map("users")
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  icon        String?
+  sortOrder   Int        @default(0) @map("sort_order")
+  parentId    String?    @map("parent_id")
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  isVisible   Boolean    @default(true) @map("is_visible")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  products    Product[]
+
+  @@map("product_categories")
+}
+
+model Product {
+  id             String        @id @default(uuid())
+  categoryId     String        @map("category_id")
+  category       Category      @relation(fields: [categoryId], references: [id])
+  name           String
+  slug           String        @unique
+  description    String?       @db.Text
+  coverImage     String?       @map("cover_image")
+  images         String[]      @default([])
+  originalPrice  Decimal       @map("original_price") @db.Decimal(10, 2)
+  sellingPrice   Decimal       @map("selling_price") @db.Decimal(10, 2)
+  costPrice      Decimal?      @map("cost_price") @db.Decimal(10, 2)
+  stock          Int           @default(0)
+  availableStock Int           @default(0) @map("available_stock")
+  tokenType      TokenType?    @map("token_type")
+  tokenAmount    Int?          @map("token_amount")
+  validityDays   Int?          @map("validity_days")
+  status         ProductStatus @default(DRAFT)
+  salesCount     Int           @default(0) @map("sales_count")
+  sortOrder      Int           @default(0) @map("sort_order")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  orderItems     OrderItem[]
+  tokenKeys      TokenKey[]
+  promotions    Promotion[]
+  cartItems     CartItem[]    @relation("ProductCart")
+
+  @@index([categoryId])
+  @@index([status])
+  @@map("products")
+}
+
+enum TokenType {
+  CHAT
+  EMBEDDING
+  IMAGE
+  VIDEO
+  API_KEY
+  ACCOUNT
+}
+
+enum ProductStatus {
+  DRAFT
+  ONLINE
+  OFFLINE
+}
+
+model TokenKey {
+  id         String      @id @default(uuid())
+  productId  String      @map("product_id")
+  product    Product     @relation(fields: [productId], references: [id])
+  keyValue   String      @map("key_value") @db.Text
+  keyType    KeyType     @default(API_KEY) @map("key_type")
+  status     KeyStatus   @default(UNUSED)
+  expireAt   DateTime?   @map("expire_at")
+  orderId    String?     @map("order_id")
+  order      Order?      @relation(fields: [orderId], references: [id])
+  soldAt     DateTime?   @map("sold_at")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+
+  @@index([productId])
+  @@index([status])
+  @@map("token_keys")
+}
+
+enum KeyType {
+  API_KEY
+  ACCOUNT
+  PASSWORD
+  TOKEN
+}
+
+enum KeyStatus {
+  UNUSED
+  SOLD
+  EXPIRED
+}
+
+model Order {
+  id             String        @id @default(uuid())
+  orderNo        String        @unique @map("order_no")
+  userId         String        @map("user_id")
+  user           User          @relation(fields: [userId], references: [id])
+  totalAmount    Decimal       @map("total_amount") @db.Decimal(10, 2)
+  discountAmount Decimal       @default(0) @map("discount_amount") @db.Decimal(10, 2)
+  payAmount      Decimal       @map("pay_amount") @db.Decimal(10, 2)
+  status         OrderStatus   @default(PENDING)
+  couponId       String?       @map("coupon_id")
+  userCoupon     UserCoupon?   @relation(fields: [couponId], references: [id])
+  promotionId    String?       @map("promotion_id")
+  paidAt         DateTime?     @map("paid_at")
+  expireAt       DateTime?     @map("expire_at")
+  remark         String?       @db.Text
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  items          OrderItem[]
+  payments       Payment[]
+  tokenKeys      TokenKey[]
+  settlements    Settlement[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  COMPLETED
+  CANCELLED
+  REFUNDING
+  REFUNDED
+}
+
+model OrderItem {
+  product      Product    @relation(fields: [productId], references: [id])
+  id          String   @id @default(uuid())
+  orderId     String   @map("order_id")
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String   @map("product_id")
+  productName String   @map("product_name")
+  quantity    Int
+  unitPrice   Decimal  @map("unit_price") @db.Decimal(10, 2)
+  subtotal    Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model Payment {
+  id        String        @id @default(uuid())
+  orderId   String        @map("order_id")
+  order     Order         @relation(fields: [orderId], references: [id])
+  userId    String        @map("user_id")
+  user      User          @relation(fields: [userId], references: [id])
+  amount    Decimal       @db.Decimal(10, 2)
+  channel   PaymentChannel
+  tradeNo   String?       @map("trade_no")
+  status    PaymentStatus @default(PENDING)
+  paidAt    DateTime?     @map("paid_at")
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  @@index([orderId])
+  @@index([userId])
+  @@map("payments")
+}
+
+enum PaymentChannel {
+  WECHAT
+  ALIPAY
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+model Settlement {
+  id             String           @id @default(uuid())
+  orderId        String           @map("order_id")
+  order          Order            @relation(fields: [orderId], references: [id])
+  platformAmount Decimal          @map("platform_amount") @db.Decimal(10, 2)
+  supplierAmount Decimal          @map("supplier_amount") @db.Decimal(10, 2)
+  status         SettlementStatus @default(PENDING)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  @@index([orderId])
+  @@map("settlements")
+}
+
+enum SettlementStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String   @map("product_id")
+  product   Product  @relation("ProductCart", fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@map("cart_items")
+}
+
+model Coupon {
+  id          String       @id @default(uuid())
+  name        String
+  code        String       @unique
+  type        CouponType
+  value       Decimal      @db.Decimal(10, 2)
+  minAmount   Decimal      @map("min_amount") @db.Decimal(10, 2)
+  totalCount  Int          @map("total_count")
+  usedCount   Int          @default(0) @map("used_count")
+  startAt     DateTime     @map("start_at")
+  endAt       DateTime     @map("end_at")
+  status      CouponStatus @default(ACTIVE)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  userCoupons UserCoupon[]
+
+  @@map("coupons")
+}
+
+enum CouponType {
+  FIXED
+  PERCENT
+}
+
+enum CouponStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model UserCoupon {
+  id         String           @id @default(uuid())
+  userId     String           @map("user_id")
+  user       User             @relation(fields: [userId], references: [id])
+  couponId   String           @map("coupon_id")
+  coupon     Coupon           @relation(fields: [couponId], references: [id])
+  status     UserCouponStatus @default(UNUSED)
+  usedAt     DateTime?        @map("used_at")
+  expiredAt  DateTime?        @map("expired_at")
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+
+  orders     Order[]
+
+  @@index([userId])
+  @@index([couponId])
+  @@map("user_coupons")
+}
+
+enum UserCouponStatus {
+  UNUSED
+  USED
+  EXPIRED
+}
+
+model Promotion {
+  id          String          @id @default(uuid())
+  name        String
+  type        PromotionType
+  startAt     DateTime        @map("start_at")
+  endAt       DateTime        @map("end_at")
+  rules       Json
+  status      PromotionStatus @default(DRAFT)
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  products    Product[]
+
+  @@map("promotions")
+}
+
+enum PromotionType {
+  SECKILL
+  GROUPBUY
+  FULL_REDUCE
+}
+
+enum PromotionStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  productId String   @map("product_id")
+  rating    Int
+  content   String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, productId])
+  @@map("reviews")
+}
+
+model AdminUser {
+  id           String     @id @default(uuid())
+  username     String     @unique
+  passwordHash String     @map("password_hash")
+  nickname     String?
+  email        String?
+  roleId       String?    @map("role_id")
+  role         AdminRole? @relation(fields: [roleId], references: [id])
+  status       AdminStatus @default(ACTIVE)
+  lastLoginAt  DateTime?  @map("last_login_at")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  logs         OperationLog[]
+
+  @@map("admin_users")
+}
+
+enum AdminStatus {
+  ACTIVE
+  DISABLED
+}
+
+model AdminRole {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  permissions Json
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  adminUsers  AdminUser[]
+
+  @@map("admin_roles")
+}
+
+model OperationLog {
+  id         String    @id @default(uuid())
+  adminId    String    @map("admin_id")
+  admin      AdminUser @relation(fields: [adminId], references: [id])
+  action     String
+  entityType String    @map("entity_type")
+  entityId   String?   @map("entity_id")
+  details    Json?
+  ipAddress  String?   @map("ip_address")
+  userAgent  String?   @map("user_agent")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@map("operation_logs")
+}
