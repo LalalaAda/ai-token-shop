@@ -4,15 +4,16 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Key,
-  Megaphone, Wallet, BarChart3, Settings, LogOut, Shield
+  Megaphone, Wallet, BarChart3, Settings, LogOut, Shield, Ticket
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 const menuItems = [
   { icon: LayoutDashboard, label: '数据看板', href: '/admin/dashboard' },
   { icon: Package, label: '商品管理', href: '/admin/admin-products' },
   { icon: ShoppingCart, label: '订单管理', href: '/admin/orders' },
   { icon: Users, label: '用户管理', href: '/admin/users' },
+  { icon: Ticket, label: '卡密管理', href: '/admin/tokens' },
   { icon: Key, label: '库存管理', href: '/admin/inventory' },
   { icon: Megaphone, label: '营销管理', href: '/admin/marketing' },
   { icon: Wallet, label: '财务管理', href: '/admin/finance' },
