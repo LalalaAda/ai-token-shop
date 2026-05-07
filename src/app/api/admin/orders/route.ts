@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/types';
+import { transition } from '@/lib/order-machine';
+import type { OrderStatus } from '@/lib/order-machine';
 
 export async function GET(request: Request) {
   try {
@@ -52,6 +54,19 @@ export async function PUT(request: Request) {
 
     if (!id || !status) {
       return NextResponse.json(errorResponse('缺少必要参数'), { status: 400 });
+    }
+
+    const existing = await prisma.order.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json(errorResponse('订单不存在'), { status: 404 });
+    }
+
+    // Validate state machine transition
+    try {
+      transition(existing.status as OrderStatus, status as OrderStatus);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : '无效的状态变更';
+      return NextResponse.json(errorResponse(message), { status: 400 });
     }
 
     const order = await prisma.order.update({
