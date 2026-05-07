@@ -81,7 +81,7 @@
 | 系统设置 | `src/app/admin/settings/page.tsx` | ✅ | (form UI) |
 | 登录页 | `src/app/admin/login/page.tsx` | ✅ | |
 
-### API 路由 (21个)
+### API 路由 (23个)
 
 | 路由 | 方法 | 用途 | 状态 |
 |------|------|------|------|
@@ -103,9 +103,12 @@
 | `/api/admin/products` | GET/POST/PUT/DELETE | 商品管理 | ✅ |
 | `/api/admin/orders` | GET/PUT | 订单管理 | ✅ |
 | `/api/admin/orders/[id]` | GET/PUT | 订单详情 | ✅ |
+| `/api/admin/orders/expire` | POST | 订单自动过期取消 | ✅ |
 | `/api/admin/users` | GET/PUT | 用户管理 | ✅ |
 | `/api/admin/tokens` | GET/POST | 卡密管理 (含批量生成) | ✅ |
+| `/api/admin/coupons` | GET/POST/PUT/DELETE | 优惠券CRUD | ✅ |
 | `/api/admin/stats` | GET | 统计数据 | ✅ |
+| `/api/coupons/validate` | POST | 优惠券校验 (用户端) | ✅ |
 
 ---
 
@@ -115,8 +118,10 @@
 |----------|------|------|
 | `src/lib/order-machine.test.ts` | 43 tests | ✅ 订单状态机 (7状态、有效/无效转换) |
 | `src/app/api/user/profile/validation.test.ts` | 10 tests | ✅ 用户资料Zod校验 |
+| `src/lib/order-expiry.test.ts` | 13 tests | ✅ 订单过期检测 (filter/build/getRemaining) |
+| `src/lib/coupon-validator.test.ts` | 14 tests | ✅ 优惠券校验 (固定/百分比、日期、金额) |
 
-**总计: 52 tests ✅ all passing**
+**总计: 79 tests ✅ all passing**
 
 ---
 
@@ -125,11 +130,11 @@
 | 序号 | 功能 | 现状 | 预计工作 |
 |------|------|------|----------|
 | 1 | 真实支付SDK接入 (微信/支付宝) | stub模式 | 3-5天 |
-| 2 | 优惠券系统 (管理+下单使用) | Prisma模型就绪 | 2天 |
+| 2 | 优惠券系统 | ✅ 已完成 | - |
 | 3 | 促销活动 (秒杀/团购/满减) | Prisma模型就绪 | 3天 |
 | 4 | 管理员权限/角色系统 | Prisma模型就绪 | 2天 |
 | 5 | 商品评价系统 | Prisma模型就绪 | 1天 |
-| 6 | 订单自动过期取消 | 未实现 | 1天 |
+| 6 | 订单自动过期取消 | ✅ 已完成 (13 tests) | - |
 | 7 | 结算/分账系统 | mock数据 | 2天 |
 
 ### P2 增强功能
@@ -157,7 +162,7 @@
 ## 📊 完成度统计
 
 ```
-总体进度: ████████████████░░░░ 80%
+总体进度: █████████████████░░░░ 85%
 
 核心功能 (P0): ████████████████ 100%  ✅ 全部完成
   - 用户注册/登录: ✅ 含自动登录、session-aware
@@ -166,13 +171,16 @@
   - 卡密生成/发放: ✅ 批量生成、库存联动、用户查看
   - 管理后台: ✅ 看板/商品/订单/用户/卡密全实时数据
 
-重要功能 (P1): ████░░░░░░░░░░░░ 20%
+重要功能 (P1): ██████████░░░░░░░░ 50%
+  - 优惠券系统: ✅ 已完成 (14 tests, admin CRUD + checkout)
+  - 订单自动过期: ✅ 已完成 (13 tests, API endpoint)
   - 数据库模型就绪: ✅ 100%
-  - 前端UI: ✅ 基本布局
-  - 后端API/逻辑: ❌ 待实现
+  - 促销/权限/评价: ❌ 待实现
 
-测试覆盖: █████████░░░░░░░░░░░ 45%
+测试覆盖: ██████████████░░░░░░ 70%
   - 状态机测试: ✅ 43 tests
+  - 过期检测: ✅ 13 tests
+  - 优惠券校验: ✅ 14 tests
   - 校验测试: ✅ 10 tests
 ```
 
@@ -184,7 +192,7 @@
 2. **类型安全** → 个别API使用 `any` 类型，需逐步替换为Zod
 3. **错误边界** → 需要统一全局 ErrorBoundary
 4. **API文档** → 缺少OpenAPI/Postman文档
-5. **P1功能** → Coupon/Promotion/Review前端未接入真实数据
+5. **P1剩余** → 促销活动/权限系统/商品评价/结算分账
 
 ---
 
@@ -220,6 +228,9 @@ ai-token-shop/
 
 | 提交 | 说明 |
 |------|------|
+| `db8db12` | feat: integrate coupon usage in checkout |
+| `14f2ae4` | feat: add coupon system (logic, CRUD API, admin page) |
+| `a09fd38` | feat: add order auto-expiry system |
 | `e4804d8` | docs: update progress report |
 | `f4f43b9` | feat: replace admin users mock data with real API |
 | `24dac68` | feat: fix inventory redirect + token product loading + broken links |
