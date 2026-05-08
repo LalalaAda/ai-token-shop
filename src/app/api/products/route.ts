@@ -1,6 +1,8 @@
 ﻿import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/types';
+import type { Prisma } from '@/generated/prisma/client';
+import { TokenType } from '@/generated/prisma/client';
 
 export async function GET(request: Request) {
   try {
@@ -12,14 +14,14 @@ export async function GET(request: Request) {
     const sort = searchParams.get('sort') || 'default';
     const tokenType = searchParams.get('tokenType');
 
-    const where: any = { status: 'ONLINE' };
+    const where: Prisma.ProductWhereInput = { status: 'ONLINE' };
 
     if (category && category !== 'all') {
       where.categoryId = category;
     }
 
     if (tokenType) {
-      where.tokenType = tokenType;
+      where.tokenType = tokenType as TokenType;
     }
 
     if (search) {
@@ -29,7 +31,7 @@ export async function GET(request: Request) {
       ];
     }
 
-    let orderBy: any = { createdAt: 'desc' };
+    let orderBy: Prisma.ProductOrderByWithRelationInput = { createdAt: 'desc' };
     if (sort === 'sales') orderBy = { salesCount: 'desc' };
     else if (sort === 'price_asc') orderBy = { sellingPrice: 'asc' };
     else if (sort === 'price_desc') orderBy = { sellingPrice: 'desc' };

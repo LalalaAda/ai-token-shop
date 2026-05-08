@@ -25,7 +25,7 @@ export async function POST(request: Request) {
           discountAmount: body.discountAmount || 0,
           expireAt: new Date(Date.now() + 30 * 60 * 1000),
           items: {
-            create: items.map((item: any) => ({
+            create: items.map((item: { productId: string; productName: string; quantity: number; unitPrice: number; subtotal: number }) => ({
               productId: item.productId,
               productName: item.productName,
               quantity: item.quantity,

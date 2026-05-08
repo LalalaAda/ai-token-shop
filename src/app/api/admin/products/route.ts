@@ -2,6 +2,8 @@
 import prisma from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/types';
 import { slugify } from '@/lib/utils';
+import type { Prisma } from '@/generated/prisma/client';
+import { ProductStatus } from '@/generated/prisma/client';
 
 export async function GET(request: Request) {
   try {
@@ -10,8 +12,8 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const status = searchParams.get('status');
 
-    const where: any = {};
-    if (status) where.status = status;
+    const where: Prisma.ProductWhereInput = {};
+    if (status) where.status = status as ProductStatus;
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({

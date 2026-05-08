@@ -214,8 +214,16 @@
 ## 🛠 技术债务
 
 1. **支付stub** → 需要接入真实微信/支付宝SDK
-2. **类型安全** → 个别API使用 `any` 类型，需逐步替换为Zod
-3. **错误边界** → 需要统一全局 ErrorBoundary
+2. ~~**类型安全** → 个别API使用 `any` 类型，需逐步替换为Zod~~ ✅ **已完成**
+   - `src/app/api/products/route.ts`: `where`/`orderBy`→ `Prisma.ProductWhereInput`/`Prisma.ProductOrderByWithRelationInput`
+   - `src/app/api/admin/products/route.ts`: `where` → `Prisma.ProductWhereInput`
+   - `src/app/api/admin/tokens/route.ts`: `where` → `Prisma.TokenKeyWhereInput`, `keyType as any` → `keyType as KeyType`
+   - `src/app/api/orders/route.ts`: `item: any` → inline type
+   - `src/app/api/tokens/route.ts`: `(session.user as any).id` → `(session.user as { id: string }).id`
+3. ~~**错误边界** → 需要统一全局 ErrorBoundary~~ ✅ **已完成**
+   - `src/app/error.tsx`: 全局错误边界 (系统级错误)
+   - `src/app/shop/error.tsx`: 用户端错误边界
+   - `src/app/admin/error.tsx`: 管理后台错误边界
 4. **API文档** → 缺少OpenAPI/Postman文档
 5. **~P1剩余~** → 所有P1功能已实现 ✅
 6. **~P2剩余~** → 所有P2功能已实现 ✅
@@ -264,4 +272,4 @@ ai-token-shop/
 | `0c6d552` | feat: add user profile API, settings page |
 | `19bc94b` | feat: add order state machine, admin order detail, tests |
 | `e820add` | feat: add user auth and token management system |
-| (pending) | feat: complete P2 features (analytics, notifications, help, search, AI tokens) |
+| `0197d6e` | feat: complete P2 features (analytics, notifications, help, search, AI tokens) |

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/lib/auth"
 import { z } from "zod"
+import type { Prisma } from "@/generated/prisma/client"
+import { KeyType, KeyStatus } from "@/generated/prisma/client"
 
 // 生成随机卡密
 function generateTokenKey(length: number = 32): string {
@@ -35,9 +37,9 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1")
     const pageSize = parseInt(searchParams.get("pageSize") || "20")
 
-    const where: any = {}
+    const where: Prisma.TokenKeyWhereInput = {}
     if (productId) where.productId = productId
-    if (status) where.status = status
+    if (status) where.status = status as KeyStatus
 
     const [tokens, total] = await Promise.all([
       prisma.tokenKey.findMany({
@@ -111,7 +113,7 @@ export async function POST(request: NextRequest) {
         data: {
           productId,
           keyValue: generateTokenKey(),
-          keyType: keyType as any,
+          keyType: keyType as KeyType,
           status: "UNUSED",
           expireAt,
         },
