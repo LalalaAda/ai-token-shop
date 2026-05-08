@@ -224,7 +224,11 @@
    - `src/app/error.tsx`: 全局错误边界 (系统级错误)
    - `src/app/shop/error.tsx`: 用户端错误边界
    - `src/app/admin/error.tsx`: 管理后台错误边界
-4. **API文档** → 缺少OpenAPI/Postman文档
+4. ~~**API文档** → 缺少OpenAPI/Postman文档~~ ✅ **已完成**
+   - `src/docs/openapi.yaml`: 完整 OpenAPI 3.0.3 规范文档
+   - 覆盖全部 29+ API 路由，含请求参数、请求体、响应格式、枚举值
+   - 包含认证方式说明 (NextAuth Session + Admin Session Cookie)
+   - 包含公共组件定义 (Pagination, Product, ApiResponse, ProductStatus)
 5. **~P1剩余~** → 所有P1功能已实现 ✅
 6. **~P2剩余~** → 所有P2功能已实现 ✅
 
