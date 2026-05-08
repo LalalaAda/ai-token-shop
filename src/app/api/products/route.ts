@@ -10,11 +10,16 @@ export async function GET(request: Request) {
     const category = searchParams.get('category');
     const search = searchParams.get('search');
     const sort = searchParams.get('sort') || 'default';
+    const tokenType = searchParams.get('tokenType');
 
     const where: any = { status: 'ONLINE' };
 
     if (category && category !== 'all') {
       where.categoryId = category;
+    }
+
+    if (tokenType) {
+      where.tokenType = tokenType;
     }
 
     if (search) {

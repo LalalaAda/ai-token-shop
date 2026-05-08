@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
-import { ShoppingCart, User, Search, LogOut } from 'lucide-react';
+import { ShoppingCart, User, Search, LogOut, Sparkles, HelpCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { NotificationBell } from './notification-bell';
 
 export function Header() {
   const { data: session, status } = useSession()
@@ -23,21 +24,35 @@ export function Header() {
             AI Token Shop
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/shop" className="text-gray-600 hover:text-blue-600 transition">首页</Link>
-            <Link href="/shop/products" className="text-gray-600 hover:text-blue-600 transition">全部商品</Link>
-            <Link href="/shop/user/orders" className="text-gray-600 hover:text-blue-600 transition">我的订单</Link>
+          <nav className="hidden md:flex items-center gap-6">
+            <Link href="/shop" className="text-gray-600 hover:text-blue-600 transition text-sm">首页</Link>
+            <Link href="/shop/products" className="text-gray-600 hover:text-blue-600 transition text-sm">全部商品</Link>
+            <Link href="/shop/ai-tokens" className="text-gray-600 hover:text-blue-600 transition text-sm flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5" />
+              AI Token
+            </Link>
+            <Link href="/shop/help" className="text-gray-600 hover:text-blue-600 transition text-sm flex items-center gap-1">
+              <HelpCircle className="w-3.5 h-3.5" />
+              帮助中心
+            </Link>
           </nav>
 
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center border rounded-lg px-3 py-2 w-64">
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center border rounded-lg px-3 py-2 w-48 lg:w-64">
               <Search className="w-4 h-4 text-gray-400 mr-2" />
               <input
                 type="text"
                 placeholder="搜索商品..."
                 className="flex-1 outline-none text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const val = (e.target as HTMLInputElement).value.trim();
+                    if (val) window.location.href = `/shop/products?search=${encodeURIComponent(val)}`;
+                  }
+                }}
               />
             </div>
+            <NotificationBell />
             <Link href="/shop/cart" className="relative p-2 hover:bg-gray-100 rounded-lg transition">
               <ShoppingCart className="w-5 h-5" />
               {cartCount > 0 && (

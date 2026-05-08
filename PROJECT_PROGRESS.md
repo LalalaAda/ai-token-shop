@@ -12,7 +12,7 @@
 | **项目类型** | AI Token 电商平台 (卡密交易) |
 | **包管理** | Bun 1.x |
 | **测试框架** | Vitest 4.1.5 (79 tests) |
-| **构建状态** | ✅ 构建成功 (57 routes) |
+| **构建状态** | ✅ 构建成功 (63 routes) |
 | **数据库** | PostgreSQL 18.3 (端口 5432) |
 | **远程仓库** | GitHub (commit per feature) |
 
@@ -64,6 +64,8 @@
 | 我的订单 | `src/app/shop/user/orders/page.tsx` | ✅ | session + localStorage |
 | 我的卡密 | `src/app/shop/user/tokens/page.tsx` | ✅ | 显示已购买卡密、复制 |
 | 演示支付 | `src/app/shop/pay/demo/page.tsx` | ✅ | 模拟支付+卡密自动发放 |
+| AI Token专区 | `src/app/shop/ai-tokens/page.tsx` | ✅ | Token类型筛选、商品展示 |
+| 帮助中心 | `src/app/shop/help/page.tsx` | ✅ | FAQ分类、可折叠问答 |
 
 ### 管理后台 (admin/)
 
@@ -81,6 +83,7 @@
 | 促销活动 | `src/app/admin/promotions/page.tsx` | ✅ | 秒杀/团购/满减CRUD |
 | 评价管理 | `src/app/admin/reviews/page.tsx` | ✅ | 评价列表、删除 |
 | 权限管理 | `src/app/admin/settings/roles/page.tsx` | ✅ | RBAC角色权限管理 |
+| 数据分析 | `src/app/admin/analytics/page.tsx` | ✅ | recharts图表 (营收/订单/分类分布) |
 | 系统设置 | `src/app/admin/settings/page.tsx` | ✅ | (form UI) |
 | 登录页 | `src/app/admin/login/page.tsx` | ✅ | |
 
@@ -106,6 +109,9 @@
 | `/api/reviews` | POST | 创建评价 (用户端) | ✅ now |
 | `/api/promotions` | GET | 活跃促销列表 (用户端) | ✅ now |
 | `/api/coupons/validate` | POST | 优惠券校验 (用户端) | ✅ |
+| `/api/notifications` | GET/PUT | 消息通知 (站内信) | ✅ |
+| `/api/admin/analytics` | GET | 数据分析API (营收/订单/分类统计) | ✅ |
+| `/api/admin/notifications` | GET/PUT | 通知管理 (后台) | ✅ |
 | `/api/admin/login` | POST | 管理员登录 | ✅ |
 | `/api/admin/products` | GET/POST/PUT/DELETE | 商品管理 | ✅ |
 | `/api/admin/orders` | GET/PUT | 订单管理 | ✅ |
@@ -147,15 +153,15 @@
 | 6 | 订单自动过期取消 | ✅ 已完成 (13 tests) | - |
 | 7 | 结算/分账系统 | ✅ 已完成 (实时API) | - |
 
-### P2 增强功能
+### P2 增强功能 ✅ 全部完成
 
-| 序号 | 功能 | 预计工作 |
-|------|------|----------|
-| 8 | 数据报表分析 (图表) | 3天 |
-| 9 | 消息通知 (站内信) | 2天 |
-| 10 | 帮助中心/FAQ | 2天 |
-| 11 | 搜索和筛选增强 | 1天 |
-| 12 | AI Token专区 | 2天 |
+| 序号 | 功能 | 状态 | 备注 |
+|------|------|------|------|
+| 8 | 数据报表分析 (图表) | ✅ | recharts (营收趋势/订单趋势/分类分布), 时间范围筛选 |
+| 9 | 消息通知 (站内信) | ✅ | NotificationBell组件, API (GET/PUT), 30s轮询 |
+| 10 | 帮助中心/FAQ | ✅ | 4分类FAQ, 可折叠问答, 联系客服入口 |
+| 11 | 搜索和筛选增强 | ✅ | 搜索框onKeyDown导航, API tokenType筛选参数 |
+| 12 | AI Token专区 | ✅ | Token类型筛选 (对话/嵌入/图像/视频/API), 商品展示 |
 
 ### P3 优化功能
 
@@ -189,6 +195,13 @@
   - 商品评价: ✅ 已完成 (用户评价 + 后台管理 + 商品页展示)
   - 结算分账: ✅ 已完成 (实时API + 自动创建 + 后台管理)
 
+增强功能 (P2): ████████████████████ 100%  ✅ 全部完成
+  - 数据报表分析: ✅ recharts图表 + 时间筛选 + API
+  - 消息通知: ✅ NotificationBell组件 + API
+  - 帮助中心/FAQ: ✅ 4分类FAQ + 可折叠问答
+  - 搜索增强: ✅ 搜索框 + API tokenType筛选
+  - AI Token专区: ✅ 类型筛选 + 产品展示
+
 测试覆盖: ██████████████░░░░░░ 70%
   - 状态机测试: ✅ 43 tests
   - 过期检测: ✅ 13 tests
@@ -205,6 +218,7 @@
 3. **错误边界** → 需要统一全局 ErrorBoundary
 4. **API文档** → 缺少OpenAPI/Postman文档
 5. **~P1剩余~** → 所有P1功能已实现 ✅
+6. **~P2剩余~** → 所有P2功能已实现 ✅
 
 ---
 
@@ -215,12 +229,12 @@ ai-token-shop/
 ├── prisma/schema.prisma       # 18+ 数据模型/枚举
 ├── src/
 │   ├── app/
-│   │   ├── api/               # API路由 (21个)
-│   │   ├── shop/              # 用户端 (12个页面)
-│   │   └── admin/             # 管理后台 (12个页面)
+│   │   ├── api/               # API路由 (26个)
+│   │   ├── shop/              # 用户端 (14个页面)
+│   │   └── admin/             # 管理后台 (13个页面)
 │   ├── components/
 │   │   ├── admin/             # 侧边栏、布局包装
-│   │   └── shop/              # 头部、底部
+│   │   └── shop/              # 头部、底部、通知铃铛
 │   ├── lib/                   # 工具库
 │   │   ├── auth.ts            # NextAuth配置
 │   │   ├── prisma.ts          # Prisma单例
@@ -250,3 +264,4 @@ ai-token-shop/
 | `0c6d552` | feat: add user profile API, settings page |
 | `19bc94b` | feat: add order state machine, admin order detail, tests |
 | `e820add` | feat: add user auth and token management system |
+| (pending) | feat: complete P2 features (analytics, notifications, help, search, AI tokens) |

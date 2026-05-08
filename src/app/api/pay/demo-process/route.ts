@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { successResponse, errorResponse } from '@/lib/types';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 // 发放卡密函数
 async function distributeTokens(orderId: string) {
@@ -113,6 +114,22 @@ export async function POST(request: Request) {
 
     // 发放卡密
     const distributedTokens = await distributeTokens(orderId);
+
+    // Create payment success notification
+    try {
+      const orderData = await prisma.order.findUnique({ where: { id: orderId }, select: { userId: true, orderNo: true } });
+      if (orderData) {
+        await createNotification({
+          userId: orderData.userId,
+          type: 'PAYMENT',
+          title: '支付成功',
+          message: `订单 ${orderData.orderNo} 已支付成功，卡密已自动发放`,
+          link: '/shop/user/tokens',
+        });
+      }
+    } catch (e) {
+      console.error('Create notification error:', e);
+    }
 
     return NextResponse.json(successResponse({ 
       success: true,

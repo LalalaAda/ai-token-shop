@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Key,
   Megaphone, Wallet, BarChart3, Settings, LogOut, Shield, Ticket,
-  Star, Percent
+  Star, Percent, TrendingUp
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
@@ -19,6 +19,7 @@ const menuItems = [
   { icon: Megaphone, label: '营销管理', href: '/admin/marketing' },
   { icon: Percent, label: '促销活动', href: '/admin/promotions' },
   { icon: Star, label: '评价管理', href: '/admin/reviews' },
+  { icon: TrendingUp, label: '数据分析', href: '/admin/analytics' },
   { icon: Wallet, label: '财务管理', href: '/admin/finance' },
   { icon: Shield, label: '权限管理', href: '/admin/settings/roles' },
   { icon: Settings, label: '系统设置', href: '/admin/settings' },

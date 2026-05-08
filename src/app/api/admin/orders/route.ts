@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/types';
 import { transition } from '@/lib/order-machine';
 import type { OrderStatus } from '@/lib/order-machine';
+import { createOrderNotification } from '@/lib/notifications';
 
 export async function GET(request: Request) {
   try {
@@ -78,7 +79,7 @@ export async function PUT(request: Request) {
     if (status === 'COMPLETED') {
       const existing = await prisma.settlement.findFirst({ where: { orderId: id } });
       if (!existing) {
-        const platformRatio = 0.8; // 80% platform, 20% supplier
+        const platformRatio = 0.8;
         const payAmount = Number(order.payAmount);
         await prisma.settlement.create({
           data: {
@@ -88,6 +89,15 @@ export async function PUT(request: Request) {
             status: 'PENDING',
           },
         });
+      }
+    }
+
+    // Create notification for user
+    if (['PAID', 'SHIPPED', 'COMPLETED', 'CANCELLED', 'REFUNDING', 'REFUNDED'].includes(status)) {
+      try {
+        await createOrderNotification(id, status);
+      } catch (e) {
+        console.error('Create notification error:', e);
       }
     }
 

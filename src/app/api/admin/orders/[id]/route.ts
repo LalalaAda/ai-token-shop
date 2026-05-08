@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/types';
 import { transition } from '@/lib/order-machine';
 import type { OrderStatus } from '@/lib/order-machine';
+import { createOrderNotification } from '@/lib/notifications';
 
 export async function GET(
   _request: Request,
@@ -107,6 +108,15 @@ export async function PUT(
             status: 'PENDING',
           },
         });
+      }
+    }
+
+    // Create notification for user
+    if (['PAID', 'SHIPPED', 'COMPLETED', 'CANCELLED', 'REFUNDING', 'REFUNDED'].includes(status)) {
+      try {
+        await createOrderNotification(id, status);
+      } catch (e) {
+        console.error('Create notification error:', e);
       }
     }
 
