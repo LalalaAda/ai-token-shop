@@ -74,6 +74,23 @@ export async function PUT(request: Request) {
       data: { status },
     });
 
+    // Auto-create settlement when order completes
+    if (status === 'COMPLETED') {
+      const existing = await prisma.settlement.findFirst({ where: { orderId: id } });
+      if (!existing) {
+        const platformRatio = 0.8; // 80% platform, 20% supplier
+        const payAmount = Number(order.payAmount);
+        await prisma.settlement.create({
+          data: {
+            orderId: id,
+            platformAmount: payAmount * platformRatio,
+            supplierAmount: payAmount * (1 - platformRatio),
+            status: 'PENDING',
+          },
+        });
+      }
+    }
+
     return NextResponse.json(successResponse(order));
   } catch (error) {
     return NextResponse.json(errorResponse('更新订单失败'), { status: 500 });

@@ -85,6 +85,7 @@ model Product {
   orderItems     OrderItem[]
   tokenKeys      TokenKey[]
   promotions    Promotion[]
+  reviews       Review[]
   cartItems     CartItem[]    @relation("ProductCart")
 
   @@index([categoryId])
@@ -348,6 +349,7 @@ model Review {
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id])
   productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id])
   rating    Int
   content   String?  @db.Text
   createdAt DateTime @default(now()) @map("created_at")

@@ -27,6 +27,20 @@ const categories = [
   { id: 'ACCOUNT', name: '账号类' },
 ];
 
+interface Promotion {
+  id: string;
+  name: string;
+  type: 'SECKILL' | 'GROUPBUY' | 'FULL_REDUCE';
+  rules: Record<string, number>;
+  products: { id: string; name: string }[];
+}
+
+const promotionTypeStyles: Record<string, { label: string; bg: string }> = {
+  SECKILL: { label: '秒杀', bg: 'bg-red-500' },
+  GROUPBUY: { label: '团购', bg: 'bg-purple-500' },
+  FULL_REDUCE: { label: '满减', bg: 'bg-blue-500' },
+};
+
 export default function ProductsPage() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
@@ -36,6 +50,7 @@ export default function ProductsPage() {
   const [category, setCategory] = useState(searchParams.get('category') || 'all');
   const [sort, setSort] = useState('default');
   const [page, setPage] = useState(1);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -64,6 +79,26 @@ export default function ProductsPage() {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  // Fetch active promotions
+  useEffect(() => {
+    const fetchPromotions = async () => {
+      try {
+        const res = await fetch('/api/promotions');
+        const json = await res.json();
+        if (json.success) setPromotions(json.data.promotions);
+      } catch (e) {
+        console.error('Failed to fetch promotions:', e);
+      }
+    };
+    fetchPromotions();
+  }, []);
+
+  // Build promotion lookup map: productId -> promotion
+  const promotionMap = new Map<string, Promotion>();
+  promotions.forEach((promo) => {
+    promo.products.forEach((p) => promotionMap.set(p.id, promo));
+  });
 
   return (
     <div className="flex gap-8">
@@ -133,6 +168,11 @@ export default function ProductsPage() {
                     <img src={product.coverImage} alt={product.name} className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-gray-400">商品图片</span>
+                  )}
+                  {promotionMap.has(product.id) && (
+                    <span className={'absolute top-2 left-2 text-white text-xs px-2 py-1 rounded ' + (promotionTypeStyles[promotionMap.get(product.id)!.type]?.bg || 'bg-red-500')}>
+                      {promotionTypeStyles[promotionMap.get(product.id)!.type]?.label || '促销'}
+                    </span>
                   )}
                   {product.availableStock < 10 && product.availableStock > 0 && (
                     <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">库存紧张</span>

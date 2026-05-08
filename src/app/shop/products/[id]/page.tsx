@@ -1,5 +1,5 @@
 ﻿import Link from 'next/link';
-import { Shield, Zap, Headphones } from 'lucide-react';
+import { Shield, Zap, Headphones, Star } from 'lucide-react';
 import prisma from '@/lib/prisma';
 import { formatPrice } from '@/lib/utils';
 import AddToCartButton from './add-to-cart-button';
@@ -20,6 +20,22 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       </div>
     );
   }
+
+  // Fetch reviews
+  const [reviews, reviewTotal] = await Promise.all([
+    prisma.review.findMany({
+      where: { productId: id },
+      include: {
+        user: { select: { id: true, nickname: true, avatar: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.review.count({ where: { productId: id } }),
+  ]);
+
+  const avgRating = reviewTotal > 0
+    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviewTotal
+    : 0;
 
   const discount = Number(product.originalPrice) - Number(product.sellingPrice);
 
@@ -72,6 +88,68 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <p className="mt-4 text-gray-600">购买后系统将自动发送账号信息，请妥善保管。如有任何问题请联系客服。</p>
         </div>
       )}
+
+      {/* Review Section */}
+      <div className="mt-12 bg-white rounded-xl border p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold">商品评价</h2>
+            {reviewTotal > 0 && (
+              <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`w-4 h-4 ${star <= Math.round(avgRating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-gray-500">
+                  {avgRating.toFixed(1)} 分 · {reviewTotal} 条评价
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {reviews.length === 0 ? (
+          <div className="text-center text-gray-400 py-8">
+            <p>暂无评价</p>
+            <p className="text-sm mt-1">购买后可以发表评价</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {reviews.map((review) => (
+              <div key={review.id} className="border-b last:border-0 pb-6 last:pb-0">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm font-medium text-gray-600">
+                    {review.user?.nickname?.[0] || '?'}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{review.user?.nickname || '匿名用户'}</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className={`w-3 h-3 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-gray-400">
+                        {new Date(review.createdAt).toLocaleDateString('zh-CN')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                {review.content && (
+                  <p className="text-sm text-gray-600 ml-11">{review.content}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
